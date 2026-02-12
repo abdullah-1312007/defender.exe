@@ -39,6 +39,7 @@ class Game:
         self.killed = 0
         self.keys = {'right': False, 'left': False, 'up': False, 'down': False}
         self.enemies = []
+        self.hazards = []
         self.bullets = []
         self.bullet_amount = 5
         
@@ -66,6 +67,9 @@ class Game:
         for bullet in self.bullets[:]:
             bullet.draw(self.win)
 
+        for hazard in self.hazards[:]:
+            hazard.draw(self.win)
+
         for enemy in self.enemies[:]:
             enemy.draw(self.win)
 
@@ -77,18 +81,30 @@ class Game:
         self.wave_manager.update(self)
 
         for enemy in self.enemies[:]:
-            enemy.update(self.player.pos)
+            if isinstance(enemy, Corruptor):
+                enemy.update(self)
+            else:
+                enemy.update(self.player.pos)
             if enemy.rect.colliderect(self.player.rect):
                 self.lives = max(0, self.lives - 1)
+                enemy.health = 0
                 self.enemies.remove(enemy)
 
             if isinstance(enemy, Trojan):
                 self.lives = max(0, self.lives - enemy.check_bullet_collisions(self.player.rect))
 
+            self.enemies = [e for e in self.enemies if not e.is_dead()]
+
         for bullet in self.bullets[:]:
             bullet.update()
             if bullet.is_offscreen(WIDTH, HEIGHT):
                 self.bullets.remove(bullet)
+
+        for hazard in self.hazards[:]:
+            if hazard.update(self.player):
+                self.lives = max(0, self.lives - 1)
+
+        self.hazards = [h for h in self.hazards if h.alive]
 
     def run(self):
         run = True

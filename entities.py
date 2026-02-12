@@ -33,7 +33,7 @@ class Player:
         if dirs['up']: direction.y -= 1
         if dirs['down']: direction.y += 1
 
-        if direction.length() > 0:
+        if direction.length_squared() > 0:
             direction = direction.normalize()
 
         self.pos += direction * self.vel
@@ -81,7 +81,7 @@ class Enemy:
         player_angle = direction.angle_to(pygame.Vector2(1, 0))
         self.angle = lerp(self.angle, -player_angle, self.rotation_speed)
 
-        if direction.length() != 0:
+        if direction.length_squared() != 0:
             direction = direction.normalize()
 
         self.pos += direction * self.speed
@@ -125,7 +125,7 @@ class Virus(Enemy):
         self.anim_time += 0.015
         direction = (player_pos - self.pos)
 
-        if direction.length() != 0:
+        if direction.length_squared() != 0:
             direction = direction.normalize()
 
         self.pos += direction * self.speed
@@ -156,7 +156,7 @@ class Trojan(Enemy):
         for bullet in self.bullets:
             bullet.update()
 
-        self.bullets = [b for b in self.bullets if not b.is_offscreen(1024, 768)]
+        self.bullets = [b for b in self.bullets if not b.is_offscreen(WIDTH, HEIGHT)]
 
     def draw(self, win):
         super().draw(win)
@@ -181,8 +181,6 @@ class Corruptor(Enemy):
     def __init__(self, x, y):
         if Corruptor.img is None:
             Corruptor.img = pygame.transform.scale2x(pygame.image.load('assets/icons/folder.png')).convert_alpha()
-        self.zone = pygame.transform.scale_by(pygame.image.load(
-            random.choice(['assets/enemies/glitch1.png', 'assets/enemies/glitch2.png'])), 1.5).convert_alpha()
 
         super().__init__(x, y, speed=1.0, health=2, img=Corruptor.img)
         self.base_img = Corruptor.img
@@ -191,10 +189,10 @@ class Corruptor(Enemy):
         self.timer = 120
         self.scale = 1.0
 
-    def update(self, _):
+    def update(self, game):
         if self.phase == "moving":
             direction = self.target - self.pos
-            if direction.length() < 2:
+            if direction.length_squared() < 4:
                 self.phase = "waiting"
             else:
                 self.pos += direction.normalize() * self.speed
@@ -205,21 +203,46 @@ class Corruptor(Enemy):
             self.scale = lerp(self.scale, 1.5, 0.08)
 
             if self.timer <= 0:
-                self.phase = "corrupted"
-                self.timer = 400
-
-        else:
-            self.base_img = self.zone
-            self.timer -= 1
-
-            if self.timer <= 0:
-                del self
+                game.hazards.append(CorruptionZone(self.pos.x, self.pos.y))
+                self.health = 0
     
     def draw(self, win):
         scaled_img = pygame.transform.scale_by(self.base_img, self.scale).convert_alpha()
         scaled_rect = scaled_img.get_rect(center=self.pos)
         win.blit(scaled_img, scaled_rect.topleft)
 
+
+class CorruptionZone:
+    def __init__(self, x, y):
+        self.pos = pygame.Vector2(x, y)
+        self.img = pygame.transform.scale_by(pygame.image.load(
+            random.choice(['assets/enemies/glitch1.png', 'assets/enemies/glitch2.png'])), 1.5).convert_alpha()
+        self.rect = self.img.get_rect(center=self.pos)
+        self.lifetimer = 400
+        self.alive = True
+        self.damage_timer = 30
+
+    def update(self, player):
+        self.lifetimer -= 1
+        
+        if self.rect.colliderect(player.rect):
+            self.damage_timer -= 1
+
+            if self.damage_timer <= 0:
+                self.damage_timer = 30
+                
+                return True
+        
+        else:
+            self.damage_timer = 30
+
+        if self.lifetimer <= 0:
+            self.alive = False
+
+        return False
+    
+    def draw(self, win):
+        win.blit(self.img, self.rect.topleft)
 
 
 pygame.quit()

@@ -1,6 +1,6 @@
 import random
 from constants import WIDTH, WAVE_WAIT_TIME, ENEMY_WAIT_TIME
-from entities import Bug, Virus, Trojan
+from entities import Bug, Virus, Trojan, Corruptor
 
 class WaveManager:
     def __init__(self):
@@ -15,7 +15,7 @@ class WaveManager:
 
         self.weights = {
             1: {"bug": 100},
-            2: {"bug": 70, "virus": 30},
+            2: {"corruptor": 70, "virus": 30},
             3: {"bug": 50, "virus": 50},
             5: {"bug": 40, "virus": 40, "trojan": 20},
             7: {"bug": 20, "virus": 40, "trojan": 40},
@@ -66,3 +66,5 @@ class WaveManager:
             game.enemies.append(Virus(x, y))
         elif enemy == "trojan":
             game.enemies.append(Trojan(x, y))
+        elif enemy == "corruptor":
+            game.enemies.append(Corruptor(x, y))
