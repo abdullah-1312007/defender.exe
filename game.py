@@ -10,6 +10,7 @@ class Game:
         self.width = WIDTH
         self.height = HEIGHT
         self.win = pygame.display.set_mode((self.width, self.height), pygame.HWSURFACE | pygame.DOUBLEBUF | pygame.SCALED)
+        pygame.display.set_caption("defender.exe")
         self.clock = pygame.time.Clock()
 
         self.icons = {
@@ -42,6 +43,7 @@ class Game:
         self.hazards = []
         self.bullets = []
         self.bullet_amount = 5
+        self.damage_flash = 10
         
         self.wave_manager = WaveManager()
         self.wave_manager.spawn_wave(self)
@@ -75,6 +77,12 @@ class Game:
 
         self.player.draw(self.win)
 
+        if self.damage_flash > 0:
+            red_overlay = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
+            red_overlay.fill((255, 0, 0, self.damage_flash))
+            self.win.blit(red_overlay, (0, 0))
+            self.damage_flash -= 1
+
     def update(self):
         self.check_collision()
         self.player.move(self.keys, WIDTH, HEIGHT)
@@ -100,9 +108,18 @@ class Game:
             if bullet.is_offscreen(WIDTH, HEIGHT):
                 self.bullets.remove(bullet)
 
+        max_glow = 0
+
         for hazard in self.hazards[:]:
-            if hazard.update(self.player):
+            damage, glow_alpha = hazard.update(self.player)
+
+            if damage:
                 self.lives = max(0, self.lives - 1)
+
+            if glow_alpha > max_glow:
+                max_glow = glow_alpha
+
+        self.damage_flash = max_glow
 
         self.hazards = [h for h in self.hazards if h.alive]
 

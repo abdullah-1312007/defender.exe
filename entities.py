@@ -224,14 +224,19 @@ class CorruptionZone:
 
     def update(self, player):
         self.lifetimer -= 1
+
+        glow_alpha = 0
+        damage = False
         
         if self.rect.colliderect(player.rect):
             self.damage_timer -= 1
 
+            progress = 30 - self.damage_timer
+            glow_alpha = int((progress / 30) * 60)
+
             if self.damage_timer <= 0:
                 self.damage_timer = 30
-                
-                return True
+                damage = True
         
         else:
             self.damage_timer = 30
@@ -239,7 +244,7 @@ class CorruptionZone:
         if self.lifetimer <= 0:
             self.alive = False
 
-        return False
+        return damage, glow_alpha
     
     def draw(self, win):
         win.blit(self.img, self.rect.topleft)

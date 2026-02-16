@@ -14,7 +14,7 @@ class WaveManager:
         self.count = 5
 
         self.weights = {
-            1: {"bug": 100},
+            1: {"bug": 10, "corruptor": 90},
             2: {"corruptor": 70, "virus": 30},
             3: {"bug": 50, "virus": 50},
             5: {"bug": 40, "virus": 40, "trojan": 20},
