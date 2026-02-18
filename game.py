@@ -34,11 +34,12 @@ class Game:
         self.overlay.fill((0, 0, 0, 128))
         self.taskbar = Taskbar(WIDTH, HEIGHT)
         self.paused = False
+        self.state = "menu"
 
         self.player = Player(450, 450)
         self.lives = 5
         self.killed = 0
-        self.keys = {'right': False, 'left': False, 'up': False, 'down': False}
+        self.keys = {'right': False, 'left': False, 'up': False, 'down': False, 'rotate_right': False, 'rotate_left': False}
         self.enemies = []
         self.hazards = []
         self.bullets = []
@@ -139,56 +140,77 @@ class Game:
                     pygame.mouse.set_pos(WIDTH // 2, HEIGHT // 2)
                     pygame.mouse.get_rel()
 
+                if self.keys['rotate_right']:
+                    self.player.angle += 10 * SENS
+                if self.keys['rotate_left']:
+                    self.player.angle -= 10 * SENS
+
             for event in pygame.event.get():
                 self.taskbar.handle_event(event)
 
                 if event.type == pygame.QUIT:
                     run = False
 
-                if event.type == pygame.KEYDOWN:
-                    if self.lives <= 0 or self.bullet_amount <= 0:
-                        if event.key == pygame.K_ESCAPE:
-                            run = False
-                        else:
-                            self.__init__()
-                            pygame.mouse.set_visible(False)
-                            pygame.event.set_grab(True)
-                            pygame.mouse.set_pos(WIDTH // 2, HEIGHT // 2)
-                            pygame.mouse.get_rel()
-                            continue
+                if self.state == "menu":
+                    handle_menu_events(self, event)
+                
+                elif self.state == "playing":
 
-                    if event.key == pygame.K_d: self.keys['right'] = True
-                    if event.key == pygame.K_a: self.keys['left'] = True
-                    if event.key == pygame.K_w: self.keys['up'] = True
-                    if event.key == pygame.K_s: self.keys['down'] = True
-                    if event.key == pygame.K_ESCAPE: run = False
-                    if event.key == pygame.K_r: self.enemies.append(Corruptor(random.randint(0, WIDTH), -20))
-                    if event.key == pygame.K_p:
-                        self.paused = not self.paused
-                        pygame.mouse.set_visible(self.paused)
-                        pygame.event.set_grab(not self.paused)
+                    if event.type == pygame.KEYDOWN:
+                        if self.lives <= 0 or self.bullet_amount <= 0:
+                            if event.key == pygame.K_ESCAPE:
+                                run = False
+                            else:
+                                self.__init__()
+                                self.state = "playing"
+                                pygame.mouse.set_visible(False)
+                                pygame.event.set_grab(True)
+                                pygame.mouse.set_pos(WIDTH // 2, HEIGHT // 2)
+                                pygame.mouse.get_rel()
+                                continue
 
-                if event.type == pygame.KEYUP:
-                    if event.key == pygame.K_d: self.keys['right'] = False
-                    if event.key == pygame.K_a: self.keys['left'] = False
-                    if event.key == pygame.K_w: self.keys['up'] = False
-                    if event.key == pygame.K_s: self.keys['down'] = False
+                        if event.key == pygame.K_d: self.keys['right'] = True
+                        if event.key == pygame.K_a: self.keys['left'] = True
+                        if event.key == pygame.K_w: self.keys['up'] = True
+                        if event.key == pygame.K_s: self.keys['down'] = True
+                        if event.key == pygame.K_RIGHT: self.keys['rotate_right'] = True
+                        if event.key == pygame.K_LEFT: self.keys['rotate_left'] = True
+                        if event.key == pygame.K_ESCAPE: run = False
+                        if event.key == pygame.K_r: self.enemies.append(Corruptor(random.randint(0, WIDTH), -20))
+                        if event.key == pygame.K_p:
+                            self.paused = not self.paused
+                            pygame.mouse.set_visible(self.paused)
+                            pygame.event.set_grab(not self.paused)
 
-                if event.type == pygame.MOUSEBUTTONDOWN and not self.paused and self.lives > 0 and self.bullet_amount > 0:
-                    self.bullets.append(Bullet(*self.player.pos, self.player.angle))
-                    self.bullet_amount -= 1
+                    if event.type == pygame.KEYUP:
+                        if event.key == pygame.K_d: self.keys['right'] = False
+                        if event.key == pygame.K_a: self.keys['left'] = False
+                        if event.key == pygame.K_w: self.keys['up'] = False
+                        if event.key == pygame.K_s: self.keys['down'] = False
+                        if event.key == pygame.K_RIGHT: self.keys['rotate_right'] = False
+                        if event.key == pygame.K_LEFT: self.keys['rotate_left'] = False
 
-            if self.lives > 0 and self.bullet_amount > 0:
-                if not self.paused:
-                    self.update()
-                self.draw()
-                if self.paused:
-                    draw_pause_overlay(self)
-            else:
-                if not show_bsod:
-                    pygame.time.delay(300)
-                    show_bsod = True
-                draw_bsod(self)
+                    if (event.type == pygame.MOUSEBUTTONDOWN or (event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE)) and not self.paused and self.lives > 0 and self.bullet_amount > 0:
+                        self.bullets.append(Bullet(*self.player.pos, self.player.angle))
+                        self.bullet_amount -= 1
+
+
+            if self.state == "menu":
+                draw_main_menu(self)
+
+            elif self.state == "playing":
+
+                if self.lives > 0 and self.bullet_amount > 0:
+                    if not self.paused:
+                        self.update()
+                    self.draw()
+                    if self.paused:
+                        draw_pause_overlay(self)
+                else:
+                    if not show_bsod:
+                        pygame.time.delay(300)
+                        show_bsod = True
+                    draw_bsod(self)
 
             pygame.display.update()
 

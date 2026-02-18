@@ -117,3 +117,21 @@ def draw_pause_overlay(self):
     text_rect = pause_text.get_rect(center=(WIDTH // 2, HEIGHT // 2))
     self.win.blit(self.overlay, (0, 0))
     self.win.blit(pause_text, text_rect)
+
+
+def draw_main_menu(self):
+    self.win.fill((0, 0, 0))
+
+    title_font = pygame.font.Font('assets/fonts/Perfect DOS VGA 437 Win.ttf', 32)
+    title_text = title_font.render("INSERT FLOPPY TO START_", True, (0, 255, 0))
+
+    self.win.blit(title_text, (WIDTH // 2 - title_text.get_width()//2, HEIGHT // 2 - 50))
+
+
+def handle_menu_events(self, event):
+    if event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
+        self.state = "playing"
+        pygame.mouse.set_visible(False)
+        pygame.event.set_grab(True)
+        pygame.mouse.set_pos(WIDTH // 2, HEIGHT // 2)
+        pygame.mouse.get_rel()
