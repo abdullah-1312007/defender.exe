@@ -5,6 +5,9 @@ from constants import WIDTH, HEIGHT, BULLET_SPEED, RADIUS
 
 pygame.init()
 
+font = pygame.font.SysFont("Arial", 14)
+text = font.render("bullet", True, (0, 0, 0))
+
 
 def lerp(start, end, factor):
     diff = (end - start + 180) % 360 - 180
@@ -94,6 +97,31 @@ class Enemy:
 
     def is_dead(self):
         return self.health <= 0
+    
+
+
+class Powerup:
+    def __init__(self, x, y, effect_type):
+        self.pos = pygame.Vector2(x, y)
+        self.type = effect_type
+        self.rect = pygame.Rect(x, y, 40, 40)
+        self.alive = True
+        self.text = text
+
+    def update(self):
+        pass
+
+    def draw(self, win):
+        pygame.draw.rect(win, (0, 255, 0), self.rect)
+        win.blit(self.text, (self.rect.centerx - self.text.get_width() // 2, self.rect.centery - self.text.get_height() // 2))
+
+    def apply(self, game):
+        if self.type == "bullets":
+            game.bullet_amount += 5
+        elif self.type == "heal":
+            game.lives = min(5, game.lives + 1)
+
+        self.alive = False
 
 
 class Bug(Enemy):

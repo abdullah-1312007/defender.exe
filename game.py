@@ -43,6 +43,7 @@ class Game:
         self.enemies = []
         self.hazards = []
         self.bullets = []
+        self.powerups = []
         self.bullet_amount = 5
         self.damage_flash = 10
         
@@ -75,6 +76,9 @@ class Game:
 
         for enemy in self.enemies[:]:
             enemy.draw(self.win)
+
+        for powerup in self.powerups[:]:
+            powerup.draw(self.win)
 
         self.player.draw(self.win)
 
@@ -123,6 +127,12 @@ class Game:
         self.damage_flash = max_glow
 
         self.hazards = [h for h in self.hazards if h.alive]
+
+        for powerup in self.powerups[:]:
+            if powerup.rect.colliderect(self.player.rect):
+                powerup.apply(self)
+                self.powerups.clear()
+        
 
     def run(self):
         run = True

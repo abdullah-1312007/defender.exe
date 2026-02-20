@@ -1,6 +1,6 @@
 import random
-from constants import WIDTH, WAVE_WAIT_TIME, ENEMY_WAIT_TIME
-from entities import Bug, Virus, Trojan, Corruptor
+from constants import WIDTH, HEIGHT, WAVE_WAIT_TIME, ENEMY_WAIT_TIME
+from entities import Bug, Virus, Trojan, Corruptor, Powerup
 
 class WaveManager:
     def __init__(self):
@@ -9,12 +9,13 @@ class WaveManager:
         self.waiting = False
         self.spawn_timer = 0
         self.spawn_delay = ENEMY_WAIT_TIME
+        self.powerups_spawned = False
         
         self.spawned = 0
         self.count = 5
 
         self.weights = {
-            1: {"bug": 10, "corruptor": 90},
+            1: {"bug": 10, "virus": 90},
             2: {"corruptor": 70, "virus": 30},
             3: {"bug": 50, "virus": 50},
             5: {"bug": 40, "virus": 40, "trojan": 20},
@@ -28,9 +29,13 @@ class WaveManager:
         if not game.enemies and self.spawned >= self.count and not self.waiting:
             self.waiting = True
             self.timer = WAVE_WAIT_TIME
+            self.powerups_spawned = False
 
         if self.waiting:
             self.timer -= 1
+            if not self.powerups_spawned:
+                self.spawn_powerups(game)
+                self.powerups_spawned = True
             if self.timer <= 0:
                 self.wave += 1
                 self.spawn_wave(game)
@@ -68,3 +73,13 @@ class WaveManager:
             game.enemies.append(Trojan(x, y))
         elif enemy == "corruptor":
             game.enemies.append(Corruptor(x, y))
+
+    def spawn_powerups(self, game):
+        choices = ["bullets", "heal", "speed", "fast fire", "double ammo"]
+        selected = random.sample(choices, 3)
+
+        for effect in selected:
+            x = random.randint(100, WIDTH - 100)
+            y = random.randint(100, HEIGHT - 100)
+            
+            game.powerups.append(Powerup(x, y, effect))
